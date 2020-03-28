@@ -1,0 +1,141 @@
+<html>
+<head>
+    <!-- jQuery and Bootstrap imports -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.4.1/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.4.1/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.4.1/css/bootstrap.min.css">
+
+    <!-- bootstrap-multiselect imports -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/0.9.15/js/bootstrap-multiselect.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/0.9.15/css/bootstrap-multiselect.css">
+
+    <!-- Highcharts imports -->
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/highcharts-more.js"></script>
+    <script src="https://code.highcharts.com/modules/exporting.js"></script>
+    <script src="https://code.highcharts.com/modules/xrange.js"></script>
+    <script src="https://code.highcharts.com/modules/export-data.js"></script>
+
+    <!-- Other stuff -->
+    <script src="dashboard.js"></script>
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Encrypted data -->
+    <script src="data.js"></script>
+    <title>LabMA/UFRJ - Covid-19 Dashboard</title>
+</head>
+<body>
+    <div id="mySidenav" class="sidenav">
+        <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+        <div style="padding-left: 10px; padding-right: 10px;">
+            <label for="type" style="color: white">Type of chart</label>
+            <div class="input-group mb-3">
+                <select class="custom-select" id="type">
+                    <option value='Total' selected>Total</option>
+                    <option value='Daily'>Daily</option>
+                </select>
+            </div>
+
+            <div class="input-group mb-3">
+                <select class="custom-select" id="variable">
+                    <option value='cases' selected>Cases</option>
+                    <option value='deaths'>Deaths</option>
+                    <option value='cases / population'>Cases / Population</option>
+                    <option value='deaths / population'>Deaths / Population</option>
+                    <option value='deaths / cases'>Deaths / Cases</option>
+                </select>
+            </div>
+            
+            <script>
+                function nthDay(){
+                    since = $('#since').val();
+                    if (since == 'since n<sup>th</sup> infected'){
+                        document.getElementById('nDiv').style.display = ""
+                    } else {
+                        document.getElementById('nDiv').style.display = "none"
+                    }
+                }
+            </script>
+
+            <div class="input-group mb-3">
+                <select class="custom-select" id="since" onchange="nthDay()">
+                    <option value='since 29/12/2019' selected>Since 29/12/2019</option>
+                    <option value='since n<sup>th</sup> infected'>Since n<sup>th</sup> infected</option>
+                </select>
+            </div>
+
+            <div style="display: none;" class="input-group mb-3" id="nDiv">
+                <input type="text" class="form-control" placeholder="Choose a n" id="n">
+            </div>
+
+            <label for="countries" style="color: white">Countries</label>
+            <select id="countries" multiple="multiple" class="btn-primary"></select>
+
+            <center style="margin-top: 20px;"><button type="button" class="btn btn-primary" onclick="updateDashboard()">Generate chart</button></center><br>
+
+            <h5 style="color: white"><center><i>Customization</i></center></h5>
+            <h7 style="color: white"><center><i>(blank for default)</i></center></h7>
+            
+            
+            <div class="input-group mb-3" style="margin-top: 10px; margin-bottom: 5px;">
+                <input type="text" class="form-control" placeholder="Title" id="title">
+            </div>
+
+            <div class="input-group mb-3" style="margin-bottom: 5px;">
+                <input type="text" class="form-control" placeholder="Subtitle" id="subtitle">
+            </div>
+
+            <div class="input-group mb-3" style="margin-bottom: 5px;">
+                <input type="number" class="form-control" placeholder="Minimum (Y axis)" id="miny">
+            </div>
+
+            <div class="input-group mb-3" style="margin-bottom: 5px;">
+                <input type="number" class="form-control" placeholder="Maximum (Y axis)" id="maxy">
+            </div>
+        </div>
+    </div>
+
+    <nav class="navbar navbar-dark bg-dark" style="padding: 0;">
+        <div class="">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item active">
+                    <a class="nav-link" style="padding: 0;" href="#"><span style="font-size:30px;cursor:pointer;margin-left:20px;" onclick="openNav()">&#9776;</span></a>
+                </li>
+            </ul>
+        </div>
+        <div class="mx-auto order-0">
+            <a class="navbar-brand mx-auto" href="#">Covid-19 Daily Data</a>
+        </div>
+    </nav>
+    
+    <!-- Plot area -->
+    <div id="chart" style="width: 100%; height: calc(100% - 50px); position: absolute;"></div>
+    <script>
+        Highcharts.setOptions({
+            lang: {
+                decimalPoint: '.',
+                thousandsSep: ' '
+            }
+        })
+
+        // add all cities as options
+        for (i in data) {
+            $('#countries').append(new Option(data[i].name, i));
+        }
+
+        // making the select become a multiselect
+        $('#countries').multiselect({
+            includeSelectAllOption: true,
+            buttonClass: 'btn btn-light',
+            buttonWidth: '100%',
+            enableFiltering: true,
+            templates: {
+                ul: '<ul class="multiselect-container dropdown-menu"style="width:100%;"></ul>'
+            },
+            maxHeight: 200
+        });
+    </script>
+</body>
+</html>
