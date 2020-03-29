@@ -26,11 +26,11 @@ for i in countries:
     data[-1]["cases"] = aux[0]
     data[-1]["deaths"] = aux[1]
 
-with open('dashboard/data.js', 'w') as f:
+with open('../data.js', 'w') as f:
     json.dump(data, f)
 
-with open('dashboard/data.js', 'r') as f:
+with open('../data.js', 'r') as f:
     data = "data = " +  f.readline()
 
-with open('dashboard/data.js', 'w') as f:
+with open('../data.js', 'w') as f:
     f.write(data)
