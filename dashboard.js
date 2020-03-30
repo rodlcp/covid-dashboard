@@ -97,9 +97,9 @@ function dealTitle(type, variable, since){
     return title
 }
 
-function updateDashboard() {
-    closeNav();
-    
+function updateDashboard() {    
+    closeNav()
+
     // selected cities and desired chart
     countries = $('#countries').val();
     type = $('#type').val();
@@ -147,13 +147,31 @@ function updateDashboard() {
             },
             type: $('#yType').val()
         },
+        exporting: {
+            chartOptions: {
+                legend: {
+                    itemStyle: {
+                        fontSize: '5.5pt'
+                    }
+                }
+            }
+        },
         plotOptions: {
             spline: {
                 marker: {
                     enabled: true
                 },
             },
-        }
+            series: {
+                animation: {
+                    complete: function () {
+                        chart.hideLoading()
+                    }
+                }
+            }
+        },
+        series: [
+        ]
     }
 
     if (type == '3'){
@@ -182,8 +200,6 @@ function updateDashboard() {
             options.xAxis.min = Date.UTC(2019,11,31,0,0,0,0)
         }
     }
-    
-    chart = Highcharts.chart('chart', options);
 
     for (country in countries){
         countryId = countries[country]
@@ -201,8 +217,11 @@ function updateDashboard() {
                 countryData.pointInterval= 3600 * 1000 * 24
             }
         }
-        chart.addSeries(countryData)
+        options.series.push(countryData)
     }
+    
+    chart = Highcharts.chart('chart', options);
+    
     return chart
 }
 

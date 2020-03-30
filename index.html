@@ -115,7 +115,7 @@
                 </select>
             </div>
 
-            <center style="margin-top: 20px;"><button type="button" class="btn btn-primary" onclick="updateDashboard()">Generate chart</button></center><br>
+            <center style="margin-top: 20px;"><button type="button" class="btn btn-primary" onclick="updateDashboard();">Generate chart</button></center><br>
 
             <h5 style="color: white"><center><i>Customization</i></center></h5>
             <h7 style="color: white"><center><i>(blank for default)</i></center></h7>
@@ -152,7 +152,17 @@
     </nav>
     
     <!-- Plot area -->
-    <div id="chart" style="width: 100%; height: calc(100% - 50px); position: absolute;"></div>
+    <div id="chart" style="width: 100%; height: calc(100% - 50px); position: absolute;">
+        <div class="row mb-3">
+            <div class="col-md-3"><img style="margin-left: 40px; margin-top: 10px;" src="arrow.png" width=400></div>
+            <div class="col-md-6" style="padding-top: 30px;">
+                <div class="jumbotron">
+                    <h1>Instructions</h1>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         Highcharts.setOptions({
             lang: {
