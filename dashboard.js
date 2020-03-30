@@ -44,14 +44,13 @@ function arrMul(a, b) {
     return c;
 };
 
-function getData(data, countryId, type, variable, since){
+function getData(data, countryId, type, variable, since, infected){
     cases = data[countryId].cases
     deaths = data[countryId].deaths
     n = 0
     if (since == 'since n<sup>th</sup> infected'){
         aux = cases.map((v, i) => arrSum(cases.slice(0,i+1)))
-        n = $('#n').val();
-        n = arrSum(aux.map((v, i)=> v < n))
+        n = arrSum(aux.map((v, i)=> v < infected))
     }
     if (type == 'Total'){
         cases = cases.map((v, i) => arrSum(cases.slice(0,i+1)))
@@ -62,10 +61,40 @@ function getData(data, countryId, type, variable, since){
     switch (variable){
         case 'cases': return cases;
         case 'deaths': return deaths;
-        case 'cases / population': return arrMul(arrDiv(cases, data[countryId].population), 100);
-        case 'deaths / population': return arrMul(arrDiv(deaths, data[countryId].population), 100);
+        case 'cases / population': return arrMul(arrDiv(cases, data[countryId].population), 100000);
+        case 'deaths / population': return arrMul(arrDiv(deaths, data[countryId].population), 100000);
         default: return arrMul(arrDiv(deaths, cases), 100);
     }
+}
+
+function getOrdinary(){
+    n = $("#n").val()
+    if (n == 1){
+        return "1<sup>st</sup>";
+    } else if (n == 2){
+        return "2<sup>nd</sup>";
+    } else if (n == 3){
+        return "3<sup>rd</sup>";
+    } else {
+        return n + "<sup>th</sup>";
+    }
+}
+
+function dealTitle(type, variable, since){
+    title = $('#title').val();
+    if (title == ''){
+        if (type == '3'){
+            title = 'Total cases x daily cases'
+        } else {
+            title = type + " " + variable;
+            if (since == 'since n<sup>th</sup> infected'){
+                title = title + " since " + getOrdinary() + " infected"
+            } else{
+                title = title + " since 31/12/2019"
+            }
+        }
+    }
+    return title
 }
 
 function updateDashboard() {
@@ -76,12 +105,11 @@ function updateDashboard() {
     type = $('#type').val();
     variable = $('#variable').val();
     since = $('#since').val();
+    n = $('#n').val();
 
     // custom options
-    title = $('#title').val();
-    if (title == ''){
-        title = type + " " + variable + " " + since;
-    }
+    
+    title = dealTitle(type, variable, since)
     subtitle = $('#subtitle').val();
     if (subtitle == ''){
         subtitle = "Source: ECDC";
@@ -110,67 +138,70 @@ function updateDashboard() {
         tooltip:{
             shared: true
         },
+        xAxis: {
+            type: $('#xType').val()
+        },
         yAxis: {
             title: {
                 text: ""
-            }
+            },
+            type: $('#yType').val()
         },
         plotOptions: {
             spline: {
                 marker: {
-                    enabled: false
+                    enabled: true
                 },
             },
         }
     }
 
-    if (variable != 'cases' && variable != 'deaths'){
-        options.tooltip.valueDecimals =  6
-        options.tooltip.valueSuffix = '%'
-        options.yAxis.title.text = '%'
-    }
-
-    if (since == "since n<sup>th</sup> infected"){
-        n = $("#n").val()
-        if (n == 1){
-            txt =  + n + "<sup>st</sup> infected";
-        } else if (n == 2){
-            txt = n + "<sup>nd</sup> infected";
-        } else if (n == 3){
-            txt = n + "<sup>rd</sup> infected";
-        } else {
-            txt = n + "<sup>th</sup> infected";
+    if (type == '3'){
+        options.xAxis.title = {
+            useHTML: true,
+            text: "Total cases"
         }
-        options["xAxis"] = {
-            title: {
-                useHTML: true,
-                text: "Days after " + txt
-            }
-        }
-        if (title == type + " " + variable + " " + since){
-            options.title.text = type + " " + variable + " since " + txt;
+        options.yAxis.title = {
+            useHTML: true,
+            text: "Daily cases"
         }
     } else {
-        options["xAxis"] = {
-            type: 'datetime',
-            min: Date.UTC(2019,11,31,0,0,0,0)
+        if (variable != 'cases' && variable != 'deaths'){
+            options.tooltip.valueDecimals =  2
+            options.tooltip.valueSuffix = ' per 100 000'
+            options.yAxis.title.text = ' per 100 000'
+        }
+    
+        if (since == "since n<sup>th</sup> infected"){
+            options.xAxis.title = {
+                useHTML: true,
+                text: "Days after " + getOrdinary() + " infected"
+            }
+        } else {
+            options.xAxis.type = 'datetime'
+            options.xAxis.min = Date.UTC(2019,11,31,0,0,0,0)
         }
     }
-
+    
     chart = Highcharts.chart('chart', options);
 
     for (country in countries){
         countryId = countries[country]
-        aux = {
+        countryData = {
             name: data[countryId].name,
             type: 'spline',
-            data: getData(data, countryId, type, variable, since)
         }
-        if (since != "since n<sup>th</sup> infected"){
-            aux.pointStart= Date.UTC(2019,11,31,0,0,0,0),
-            aux.pointInterval= 3600 * 1000 * 24
+        if (type == '3'){
+            daily = getData(data, countryId, 'Daily', 'cases', "since n<sup>th</sup> infected", 1)
+            countryData.data = getData(data, countryId, 'Total', 'cases', "since n<sup>th</sup> infected", 1).map((v, i)=>[v, daily[i]])
+        } else {
+            countryData.data = getData(data, countryId, type, variable, since, n)
+            if (since != "since n<sup>th</sup> infected"){
+                countryData.pointStart= Date.UTC(2019,11,31,0,0,0,0),
+                countryData.pointInterval= 3600 * 1000 * 24
+            }
         }
-        chart.addSeries(aux)
+        chart.addSeries(countryData)
     }
     return chart
 }

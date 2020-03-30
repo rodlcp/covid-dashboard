@@ -1,33 +1,33 @@
+import pandas as pd
 import json
-import mysql.connector
 
-def transpose(m):
-    return [[m[j][i] for j in range(len(m))] for i in range(len(m[0]))] 
+data = pd.read_excel('covid.xlsx')
+data = pd.DataFrame(data.values[:, [0, 4, 5, 6]], columns=['date', 'cases', 'deaths', 'country'])
+data = data.sort_values('date').reset_index(drop=True)
+data["country"] = data["country"].str.replace("_", " ")
 
-cnx = mysql.connector.connect(user='root', password='',
-                              host='127.0.0.1',
-                              database='covid')
+countries = pd.read_csv('countries.csv', delimiter=';')
 
-cursor = cnx.cursor()
-cursor.execute("SELECT * FROM country_info")
-countries = cursor.fetchall()
+cases = pd.pivot_table(data, values="cases", index = 'country', columns = 'date', aggfunc=sum).fillna(0)
+deaths = pd.pivot_table(data, values="deaths", index = 'country', columns = 'date', aggfunc=sum).fillna(0)
 
-data = []
-for i in countries:
-    data.append({
-        'name': i[0],
-        'code': i[1],
-        'population': i[2],
-        'firstCase': i[3]
-    })
-    cursor.execute("SELECT cases, deaths FROM complete_data WHERE country_name = '{}' ORDER BY date".format(i[0]))
-    aux = cursor.fetchall()
-    aux = transpose(aux)
-    data[-1]["cases"] = aux[0]
-    data[-1]["deaths"] = aux[1]
+countries2 = data['country'].unique()
+countries2.sort()
+
+output = []
+
+for (name, group, population) in countries.values:
+    if name in countries2:
+        output.append({
+            "name": name,
+            "population": population,
+            "group": group,
+            "cases": list(cases.loc[cases.index == name].values[0]),
+            "deaths": list(deaths.loc[cases.index == name].values[0])
+        })
 
 with open('../data.js', 'w') as f:
-    json.dump(data, f)
+    json.dump(output, f)
 
 with open('../data.js', 'r') as f:
     data = "data = " +  f.readline()
