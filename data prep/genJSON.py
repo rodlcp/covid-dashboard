@@ -10,7 +10,11 @@ now = datetime.datetime.now()
 try:
     urllib.request.urlretrieve("https://www.ecdc.europa.eu/sites/default/files/documents/COVID-19-geographic-disbtribution-worldwide-{}-{}-{}.xlsx".format(str(now.year).zfill(4), str(now.month).zfill(2), str((now + timedelta(days=1)).day).zfill(2)), "/home/rodrigo/homepage/covid/data_prep/ecdc_data.xslx")
 except:
-    urllib.request.urlretrieve("https://www.ecdc.europa.eu/sites/default/files/documents/COVID-19-geographic-disbtribution-worldwide-{}-{}-{}.xlsx".format(str(now.year).zfill(4), str(now.month).zfill(2), str(now.day).zfill(2)), "/home/rodrigo/homepage/covid/data_prep/ecdc_data.xslx")
+    try:
+        urllib.request.urlretrieve("https://www.ecdc.europa.eu/sites/default/files/documents/COVID-19-geographic-disbtribution-worldwide-{}-{}-{}.xlsx".format(str(now.year).zfill(4), str(now.month).zfill(2), str(now.day).zfill(2)), "/home/rodrigo/homepage/covid/data_prep/ecdc_data.xslx")
+    except:
+        urllib.request.urlretrieve("https://www.ecdc.europa.eu/sites/default/files/documents/COVID-19-geographic-disbtribution-worldwide-{}-{}-{}.xlsx".format(str(now.year).zfill(4), str(now.month).zfill(2), str((now - timedelta(days=1)).day).zfill(2)), "/home/rodrigo/homepage/covid/data_prep/ecdc_data.xslx")
+
 data = pd.read_excel('/home/rodrigo/homepage/covid/data_prep/ecdc_data.xslx')
 data = pd.DataFrame(data.values[:, [0, 4, 5, 6]], columns=['date', 'cases', 'deaths', 'country'])
 data = data.sort_values('date').reset_index(drop=True)
