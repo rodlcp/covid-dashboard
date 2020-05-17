@@ -8,15 +8,16 @@ from datetime import timedelta
 now = datetime.datetime.now()
 
 try:
-    urllib.request.urlretrieve("https://www.ecdc.europa.eu/sites/default/files/documents/COVID-19-geographic-disbtribution-worldwide-{}-{}-{}.xlsx".format(str(now.year).zfill(4), str(now.month).zfill(2), str((now + timedelta(days=1)).day).zfill(2)), "/home/rodrigo/homepage/covid/data_prep/ecdc_data.xslx")
+    urllib.request.urlretrieve("https://www.ecdc.europa.eu/sites/default/files/documents/COVID-19-geographic-disbtribution-worldwide-{}-{}-{}.xlsx".format(str(now.year).zfill(4), str(now.month).zfill(2), str((now + timedelta(days=1)).day).zfill(2)), "/home/rodrigo/homepage/covid/data_prep/ecdc_data.xlsx")
 except:
     try:
-        urllib.request.urlretrieve("https://www.ecdc.europa.eu/sites/default/files/documents/COVID-19-geographic-disbtribution-worldwide-{}-{}-{}.xlsx".format(str(now.year).zfill(4), str(now.month).zfill(2), str(now.day).zfill(2)), "/home/rodrigo/homepage/covid/data_prep/ecdc_data.xslx")
+        urllib.request.urlretrieve("https://www.ecdc.europa.eu/sites/default/files/documents/COVID-19-geographic-disbtribution-worldwide-{}-{}-{}.xlsx".format(str(now.year).zfill(4), str(now.month).zfill(2), str(now.day).zfill(2)), "/home/rodrigo/homepage/covid/data_prep/ecdc_data.xlsx")
     except:
-        urllib.request.urlretrieve("https://www.ecdc.europa.eu/sites/default/files/documents/COVID-19-geographic-disbtribution-worldwide-{}-{}-{}.xlsx".format(str(now.year).zfill(4), str(now.month).zfill(2), str((now - timedelta(days=1)).day).zfill(2)), "/home/rodrigo/homepage/covid/data_prep/ecdc_data.xslx")
+        urllib.request.urlretrieve("https://www.ecdc.europa.eu/sites/default/files/documents/COVID-19-geographic-disbtribution-worldwide-{}-{}-{}.xlsx".format(str(now.year).zfill(4), str(now.month).zfill(2), str((now - timedelta(days=1)).day).zfill(2)), "/home/rodrigo/homepage/covid/data_prep/ecdc_data.xlsx")
 
-data = pd.read_excel('/home/rodrigo/homepage/covid/data_prep/ecdc_data.xslx')
+data = pd.read_excel('/home/rodrigo/homepage/covid/data_prep/ecdc_data.xlsx')
 data = pd.DataFrame(data.values[:, [0, 4, 5, 6]], columns=['date', 'cases', 'deaths', 'country'])
+data['date'] = pd.to_datetime(data['date'], dayfirst=True)
 data = data.sort_values('date').reset_index(drop=True)
 data["country"] = data["country"].str.replace("_", " ")
 
