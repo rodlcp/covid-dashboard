@@ -63,7 +63,7 @@ function getData(data, countryId, type, variable, since, infected){
         aux = cases.map((v, i) => arrSum(cases.slice(0,i+1)))
         k = arrSum(aux.map((v, i)=> v < infected))
     }
-    if (type == 'Total'){
+    if (type.includes('Total')){
         cases = cases.map((v, i) => arrSum(cases.slice(0,i+1)))
         deaths = deaths.map((v, i) => arrSum(deaths.slice(0,i+1)))
     }
@@ -95,25 +95,25 @@ function dealTitle(type, variable, since){
     title = $('#title').val();
     if (title == ''){
         if (type == '3'){
-            title = 'Total ' + variable + ' x daily ' + variable
+            title = 'Total ' + variable + ' x weekly ' + variable
         } else {
             title = type + " " + variable;
             if (since == 'since n<sup>th</sup> infected'){
                 title = title + " since " + getOrdinary() + " infected"
             } else{
-                title = title + " since 31/12/2019"
+                title = title + " since 03/01/2020"
             }
         }
     }
     return title
 }
 
-function updateDashboard() {    
-    closeNav()
+function plotSeries(){
+    type = $('#type').val();
 
+    
     // selected cities and desired chart
     countries = $('#countries').val();
-    type = $('#type').val();
     variable = $('#variable').val();
     since = $('#since').val();
     n = $('#n').val();
@@ -123,7 +123,7 @@ function updateDashboard() {
     title = dealTitle(type, variable, since)
     subtitle = $('#subtitle').val();
     if (subtitle == ''){
-        subtitle = "Source: ECDC";
+        subtitle = "Data Source: WHO";
     }
 
     miny = parseInt($('#miny').val());
@@ -186,7 +186,7 @@ function updateDashboard() {
         }
         options.yAxis.title = {
             useHTML: true,
-            text: "Daily " + variable
+            text: "Weekly " + variable
         }
     } else {    
         if (since == "since n<sup>th</sup> infected"){
@@ -196,7 +196,7 @@ function updateDashboard() {
             }
         } else {
             options.xAxis.type = 'datetime'
-            options.xAxis.min = Date.UTC(2019,11,31,0,0,0,0)
+            options.xAxis.min = Date.UTC(2020,00,03,0,0,0,0)
         }
     }
 
@@ -225,7 +225,7 @@ function updateDashboard() {
         } else {
             countryData.data = getData(data, countryId, type, variable, since, n)
             if (since != "since n<sup>th</sup> infected"){
-                countryData.pointStart= Date.UTC(2019,11,31,0,0,0,0),
+                countryData.pointStart= Date.UTC(2020,00,03,0,0,0,0),
                 countryData.pointInterval= 3600 * 1000 * 24
             }
         }
@@ -236,5 +236,104 @@ function updateDashboard() {
     chart.renderer.image('minerva_ufrj.png', 70, 5, 78, 113).add()
     
     return chart
+}
+
+function plotMap(){
+    type = $('#type').val();
+    variable = $('#variable').val();
+
+    title = type.substr(6) + " " + variable;
+
+    subtitle = $('#subtitle').val();
+    if (subtitle == ''){
+        subtitle = "Data Source: WHO";
+    }
+
+    miny = parseInt($('#miny').val());
+    if (isNaN(miny)){
+        miny = 1;
+    }
+    maxy = parseInt($('#maxy').val());
+    if (isNaN(maxy)){
+        maxy = null;
+    }
+
+    if (variable == 'cases'){
+        seriesName = "Cases"
+    } else if (variable == 'deaths'){
+        seriesName = "Deaths"
+    } else if (variable == 'cases / population'){
+        seriesName = "Cases / Population (per 100 000)"
+    } else if (variable == 'deaths / population'){
+        seriesName = "Deaths / Population (per 100 000)"
+    } else {
+        seriesName = "Deaths / Cases (per 100 000)"
+    }
+    mapData = []
+
+    for (i in data){
+        if ((typeof(data[i].country_code) !== 'undefined') && (data[i].country_code.length == 3)){
+            aux = getData(data, i, type, variable, 'since n<sup>th</sup> infected', 0)
+            mapData.push({
+                code: data[i].country_code.toUpperCase(), 
+                value: aux[aux.length-1] + 1e-16
+            })
+        }
+    }
+
+    chart = Highcharts.mapChart('chart', {
+        chart: {
+            map: 'custom/world'
+        },
+
+        title: {
+            useHTML: true,
+            text: title
+        },
+
+        subtitle:{
+            text: subtitle
+        },
+
+        mapNavigation: {
+            enabled: true
+        },
+
+        mapNavigation: {
+            enabled: true,
+        },
+
+        tooltip:{
+            valueDecimals: 0
+        },
+
+        colorAxis: {
+            min: miny,
+            max: maxy,
+            type: $('#yType').val()
+        },
+
+        series: [{
+            data: mapData,
+            joinBy: ['iso-a3', 'code'],
+            name: seriesName
+        }]
+    });
+
+    chart.renderer.image('minerva_ufrj.png', 70, 5, 78, 113).add()
+
+    return chart
+}
+
+function updateDashboard() {    
+    closeNav()
+
+    type = $('#type').val();
+
+    if (type.substr(0, 3) == 'Map'){
+        return plotMap();
+    } else {
+        return plotSeries();
+    }
 }
 
